@@ -5,7 +5,8 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const multer = require("multer");
-const fs = require("fs");
+const streamifier = require("streamifier");
+const cloudinary = require("cloudinary").v2;
 
 const User = require("./models/User");
 const Post = require("./models/Post");
@@ -13,22 +14,43 @@ const Post = require("./models/Post");
 require("dotenv").config();
 
 const app = express();
-const uploadMiddleware = multer({ dest: "uploads/" });
+const uploadMiddleware = multer({ storage: multer.memoryStorage() });
 const salt = bcrypt.genSaltSync(10);
-const secret = "ssajhfuiqfhoqhuw67196";
+const secret = process.env.JWT_SECRET;
+
+// Cloudinary config
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_NAME,
+  api_key: process.env.CLOUDINARY_KEY,
+  api_secret: process.env.CLOUDINARY_SECRET,
+});
 
 app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
 app.use(express.json());
 app.use(cookieParser());
-app.use("/uploads", express.static(__dirname + "/uploads"));
 
+// Mongo
 mongoose.connect(process.env.MONGODB_URL)
-  .then(() => {
-    console.log("MongoDB connected");
-    app.listen(4000, () => console.log("Server running on 4000"));
-  });
+  .then(() => console.log("MongoDB connected"))
+  .catch(err => console.error(err));
 
-// AUTH
+app.listen(4000, () => console.log("Server running on 4000"));
+
+// helper: upload buffer to cloudinary
+function uploadToCloudinary(buffer) {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: "blog" },
+      (err, result) => {
+        if (err) reject(err);
+        else resolve(result);
+      }
+    );
+    streamifier.createReadStream(buffer).pipe(stream);
+  });
+}
+
+// ================= AUTH =================
 app.post("/register", async (req, res) => {
   const { username, password } = req.body;
   try {
@@ -51,7 +73,10 @@ app.post("/login", async (req, res) => {
   if (!passOk) return res.status(400).json("Wrong credentials");
 
   jwt.sign({ id: userDoc._id }, secret, {}, (err, token) => {
-    res.cookie("token", token).json({ id: userDoc._id, username });
+    res.cookie("token", token, { httpOnly: true }).json({
+      id: userDoc._id,
+      username,
+    });
   });
 });
 
@@ -59,16 +84,18 @@ app.post("/logout", (req, res) => {
   res.cookie("token", "").json("ok");
 });
 
-// CREATE POST
+// ================= CREATE POST =================
 app.post("/post", uploadMiddleware.single("file"), async (req, res) => {
-  const { originalname, path } = req.file;
-  const ext = originalname.split(".").pop();
-  const newPath = path + "." + ext;
-  fs.renameSync(path, newPath);
-
   const { token } = req.cookies;
+
   jwt.verify(token, secret, async (err, info) => {
     if (err) return res.status(401).json("Unauthorized");
+
+    let imageUrl = "";
+    if (req.file) {
+      const uploaded = await uploadToCloudinary(req.file.buffer);
+      imageUrl = uploaded.secure_url;
+    }
 
     const { title, summary, content } = req.body;
 
@@ -76,7 +103,7 @@ app.post("/post", uploadMiddleware.single("file"), async (req, res) => {
       title,
       summary,
       content,
-      cover: newPath,
+      cover: imageUrl,
       author: info.id,
     });
 
@@ -84,7 +111,7 @@ app.post("/post", uploadMiddleware.single("file"), async (req, res) => {
   });
 });
 
-// GET POSTS
+// ================= GET POSTS =================
 app.get("/post", async (req, res) => {
   const posts = await Post.find()
     .populate("author", ["username"])
@@ -92,24 +119,17 @@ app.get("/post", async (req, res) => {
   res.json(posts);
 });
 
-// GET SINGLE POST
+// ================= GET SINGLE POST =================
 app.get("/post/:id", async (req, res) => {
   const post = await Post.findById(req.params.id)
     .populate("author", ["username"]);
   res.json(post);
 });
 
-// UPDATE POST
+// ================= UPDATE POST =================
 app.put("/post/:id", uploadMiddleware.single("file"), async (req, res) => {
-  let newFile = null;
-
-  if (req.file) {
-    const ext = req.file.originalname.split(".").pop();
-    newFile = req.file.path + "." + ext;
-    fs.renameSync(req.file.path, newFile);
-  }
-
   const { token } = req.cookies;
+
   jwt.verify(token, secret, async (err, info) => {
     if (err) return res.status(401).json("Unauthorized");
 
@@ -120,10 +140,14 @@ app.put("/post/:id", uploadMiddleware.single("file"), async (req, res) => {
       return res.status(403).json("Forbidden");
     }
 
+    if (req.file) {
+      const uploaded = await uploadToCloudinary(req.file.buffer);
+      postDoc.cover = uploaded.secure_url;
+    }
+
     postDoc.title = req.body.title;
     postDoc.summary = req.body.summary;
     postDoc.content = req.body.content;
-    if (newFile) postDoc.cover = newFile;
 
     await postDoc.save();
     res.json(postDoc);

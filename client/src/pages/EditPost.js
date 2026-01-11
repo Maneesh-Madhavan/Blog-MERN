@@ -1,9 +1,5 @@
 import { Editor } from "react-draft-wysiwyg";
-import {
-  EditorState,
-  ContentState,
-  convertToRaw
-} from "draft-js";
+import { EditorState, ContentState, convertToRaw } from "draft-js";
 import htmlToDraft from "html-to-draftjs";
 import draftToHtml from "draftjs-to-html";
 import { useEffect, useState } from "react";
@@ -18,11 +14,10 @@ export default function EditPost() {
   const [summary, setSummary] = useState("");
   const [files, setFiles] = useState(null);
   const [redirect, setRedirect] = useState(false);
+  const [loading, setLoading] = useState(false); // <-- spinner state
 
   useEffect(() => {
-    fetch("http://localhost:4000/post/" + id, {
-      credentials: "include",
-    })
+    fetch("http://localhost:4000/post/" + id, { credentials: "include" })
       .then(res => res.json())
       .then(postInfo => {
         setTitle(postInfo.title);
@@ -31,12 +26,7 @@ export default function EditPost() {
         if (postInfo.content) {
           const blocksFromHtml = htmlToDraft(postInfo.content);
           const { contentBlocks, entityMap } = blocksFromHtml;
-
-          const contentState = ContentState.createFromBlockArray(
-            contentBlocks,
-            entityMap
-          );
-
+          const contentState = ContentState.createFromBlockArray(contentBlocks, entityMap);
           setEditorState(EditorState.createWithContent(contentState));
         }
       });
@@ -44,11 +34,9 @@ export default function EditPost() {
 
   async function updatePost(ev) {
     ev.preventDefault();
+    setLoading(true); // start spinner
 
-    const content = draftToHtml(
-      convertToRaw(editorState.getCurrentContent())
-    );
-
+    const content = draftToHtml(convertToRaw(editorState.getCurrentContent()));
     const data = new FormData();
     data.set("title", title);
     data.set("summary", summary);
@@ -63,12 +51,13 @@ export default function EditPost() {
 
     if (response.ok) {
       setRedirect(true);
+    } else {
+      setLoading(false); // stop spinner if error
+      alert("Failed to update post");
     }
   }
 
-  if (redirect) {
-    return <Navigate to={"/post/" + id} />;
-  }
+  if (redirect) return <Navigate to={"/post/" + id} />;
 
   return (
     <form onSubmit={updatePost} style={{ maxWidth: 800, margin: "auto" }}>
@@ -109,7 +98,9 @@ export default function EditPost() {
         />
       </div>
 
-      <button style={{ marginTop: 10 }}>Update Post</button>
+      <button style={{ marginTop: 10 }} disabled={loading}>
+        {loading ? "Updating..." : "Update Post"}
+      </button>
     </form>
   );
 }
