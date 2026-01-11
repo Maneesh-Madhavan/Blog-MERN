@@ -36,12 +36,17 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
-/* ---------------- DB ---------------- */
-mongoose.connect(process.env.MONGODB_URL)
-  .then(() => console.log("MongoDB connected"))
-  .catch(err => console.error(err));
+/* ---------------- DB (SAFE FOR VERCEL) ---------------- */
+let isConnected = false;
 
-app.listen(4000, () => console.log("Server running on 4000"));
+async function connectDB() {
+  if (isConnected) return;
+  await mongoose.connect(process.env.MONGODB_URL);
+  isConnected = true;
+  console.log("MongoDB connected");
+}
+
+connectDB().catch(err => console.error("DB error:", err));
 
 /* ---------------- HELPERS ---------------- */
 function uploadToCloudinary(buffer) {
@@ -75,7 +80,7 @@ app.post("/register", async (req, res) => {
       password: bcrypt.hashSync(password, salt),
     });
     res.json(userDoc);
-  } catch {
+  } catch (e) {
     res.status(400).json({ error: "Register failed" });
   }
 });
@@ -91,8 +96,8 @@ app.post("/login", async (req, res) => {
   jwt.sign({ id: userDoc._id }, secret, {}, (err, token) => {
     res.cookie("token", token, {
       httpOnly: true,
-      secure: true,       // ✅ REQUIRED FOR VERCEL
-      sameSite: "none",   // ✅ REQUIRED FOR CROSS-SITE
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     }).json({ id: userDoc._id, username });
   });
 });
@@ -100,8 +105,8 @@ app.post("/login", async (req, res) => {
 app.post("/logout", (req, res) => {
   res.cookie("token", "", {
     httpOnly: true,
-    secure: true,
-    sameSite: "none",
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
   }).json("ok");
 });
 
@@ -176,3 +181,11 @@ app.delete("/post/:id", authMiddleware, async (req, res) => {
   await Post.findByIdAndDelete(req.params.id);
   res.json("Deleted");
 });
+
+/* ---------------- LOCAL ONLY ---------------- */
+if (process.env.NODE_ENV !== "production") {
+  app.listen(4000, () => console.log("Server running on 4000"));
+}
+
+/* ---------------- EXPORT FOR VERCEL ---------------- */
+module.exports = app;
