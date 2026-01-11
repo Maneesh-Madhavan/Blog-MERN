@@ -17,7 +17,8 @@ export default function EditPost() {
   const [loading, setLoading] = useState(false); // <-- spinner state
 
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_API_URL}post` + id, { credentials: "include" })
+    
+    fetch(`${process.env.REACT_APP_API_URL}post/` + id, { credentials: "include" })
       .then(res => res.json())
       .then(postInfo => {
         setTitle(postInfo.title);
