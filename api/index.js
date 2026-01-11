@@ -25,7 +25,15 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_SECRET,
 });
 
-app.use(cors({ credentials: true, origin: true }));
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "https://blog-mern-frontend-opal-delta.vercel.app",
+    ],
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(cookieParser());
 
