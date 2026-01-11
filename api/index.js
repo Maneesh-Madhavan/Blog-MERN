@@ -91,7 +91,20 @@ app.post("/login", async (req, res) => {
 app.post("/logout", (req, res) => {
   res.cookie("token", "").json("ok");
 });
+app.get("/myposts", async (req, res) => {
+  const { token } = req.cookies;
+  if (!token) return res.status(401).json("Unauthorized");
 
+  jwt.verify(token, secret, async (err, info) => {
+    if (err) return res.status(401).json("Unauthorized");
+
+    const posts = await Post.find({ author: info.id })
+      .populate("author", ["username"])
+      .sort({ createdAt: -1 });
+
+    res.json(posts);
+  });
+});
 // ================= CREATE POST =================
 app.post("/post", uploadMiddleware.single("file"), async (req, res) => {
   const { token } = req.cookies;
@@ -161,3 +174,23 @@ app.put("/post/:id", uploadMiddleware.single("file"), async (req, res) => {
     res.json(postDoc);
   });
 });
+// ================= DELETE POST =================
+app.delete("/post/:id", async (req, res) => {
+  const { token } = req.cookies;
+  if (!token) return res.status(401).json("Unauthorized");
+
+  jwt.verify(token, secret, async (err, info) => {
+    if (err) return res.status(401).json("Unauthorized");
+
+    const postDoc = await Post.findById(req.params.id);
+    if (!postDoc) return res.status(404).json("Not found");
+
+    if (postDoc.author.toString() !== info.id) {
+      return res.status(403).json("Forbidden");
+    }
+
+    await Post.findByIdAndDelete(req.params.id);
+    res.json("Deleted");
+  });
+});
+

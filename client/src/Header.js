@@ -1,18 +1,17 @@
-import {Link} from "react-router-dom";
-import {useContext, useEffect, useState} from "react";
+import {Link, useLocation} from "react-router-dom";
+import {useContext, useEffect} from "react";
 import {UserContext} from "./UserContext";
-import { MdAddCircleOutline, MdLogout } from "react-icons/md"; // Material icons
+import { MdAddCircleOutline, MdLogout, MdArticle, MdLogin, MdPersonAdd } from "react-icons/md";
 
 export default function Header() {
-  const {setUserInfo,userInfo} = useContext(UserContext);
+  const {setUserInfo, userInfo} = useContext(UserContext);
+  const location = useLocation();
+
   useEffect(() => {
     fetch(`${process.env.REACT_APP_API_URL}profile`, {
       credentials: 'include',
-    }).then(response => {
-      response.json().then(userInfo => {
-        setUserInfo(userInfo);
-      });
-    });
+    }).then(res => res.json())
+      .then(user => setUserInfo(user));
   }, []);
 
   function logout() {
@@ -23,25 +22,32 @@ export default function Header() {
     setUserInfo(null);
   }
 
-  const username = userInfo?.username;
+  const isAuthPage = location.pathname === "/login" || location.pathname === "/register";
 
   return (
-  <header>
+    <header>
       <Link to="/" className="logo">InsightBlog</Link>
       <nav>
-        {userInfo ? (
+        {!isAuthPage && userInfo ? (
           <>
-            <Link to="/create" title="Create new post" className="icon-link">
+            <Link to="/create" title="Create Post" className="icon-link">
               <MdAddCircleOutline size={24} />
+            </Link>
+            <Link to="/myposts" title="My Posts" className="icon-link">
+              <MdArticle size={24} />
             </Link>
             <button onClick={logout} title="Logout" className="icon-link">
               <MdLogout size={24} />
             </button>
           </>
-        ) : (
+        ) : !userInfo && (
           <>
-            <Link to="/login">Login</Link>
-            <Link to="/register">Register</Link>
+            <Link to="/login" title="Login" className="icon-link">
+              <MdLogin size={24} />
+            </Link>
+            <Link to="/register" title="Register" className="icon-link">
+              <MdPersonAdd size={24} />
+            </Link>
           </>
         )}
       </nav>
