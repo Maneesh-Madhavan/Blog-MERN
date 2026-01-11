@@ -1,6 +1,7 @@
 import {Link} from "react-router-dom";
 import {useContext, useEffect, useState} from "react";
 import {UserContext} from "./UserContext";
+import { MdAddCircleOutline, MdLogout } from "react-icons/md"; // Material icons
 
 export default function Header() {
   const {setUserInfo,userInfo} = useContext(UserContext);
@@ -25,16 +26,19 @@ export default function Header() {
   const username = userInfo?.username;
 
   return (
-    <header>
-      <Link to="/" className="logo">MyBlog</Link>
+  <header>
+      <Link to="/" className="logo">InsightBlog</Link>
       <nav>
-        {username && (
+        {userInfo ? (
           <>
-            <Link to="/create">Create new post</Link>
-            <a onClick={logout}>Logout ({username})</a>
+            <Link to="/create" title="Create new post" className="icon-link">
+              <MdAddCircleOutline size={24} />
+            </Link>
+            <button onClick={logout} title="Logout" className="icon-link">
+              <MdLogout size={24} />
+            </button>
           </>
-        )}
-        {!username && (
+        ) : (
           <>
             <Link to="/login">Login</Link>
             <Link to="/register">Register</Link>

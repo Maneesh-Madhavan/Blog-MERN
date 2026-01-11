@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 
 export default function IndexPage() {
   const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true); // spinner while fetching
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch(`${process.env.REACT_APP_API_URL}post`)
@@ -14,15 +14,16 @@ export default function IndexPage() {
       });
   }, []);
 
-  if (loading) return <div style={{ textAlign: "center", marginTop: 50 }}>Loading posts...</div>;
+  if (loading)
+    return <div className="loading">Loading posts...</div>;
 
   return (
-    <>
+    <main>
       {posts.length > 0 ? (
         posts.map(post => <Post key={post._id} {...post} />)
       ) : (
-        <div style={{ textAlign: "center", marginTop: 50 }}>No posts found</div>
+        <div className="no-posts">No posts found</div>
       )}
-    </>
+    </main>
   );
 }

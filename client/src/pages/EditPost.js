@@ -44,7 +44,7 @@ export default function EditPost() {
     data.set("content", content);
     if (files?.[0]) data.set("file", files[0]);
 
-    const response = await fetch(`${process.env.REACT_APP_API_URL}post` + id, {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}post/` + id, {
       method: "PUT",
       body: data,
       credentials: "include",
@@ -95,7 +95,11 @@ export default function EditPost() {
             list: { options: ["unordered", "ordered"] },
             textAlign: { options: ["left", "center", "right", "justify"] },
             history: { options: ["undo", "redo"] },
-          }}
+          }}  editorStyle={{
+    minHeight: "200px",
+    fontSize: "1rem", // <-- this sets default font size
+    padding: "5px"
+  }}
         />
       </div>
 
