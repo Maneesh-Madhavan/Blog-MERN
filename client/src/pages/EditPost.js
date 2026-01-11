@@ -17,7 +17,7 @@ export default function EditPost() {
   const [loading, setLoading] = useState(false); // <-- spinner state
 
   useEffect(() => {
-    fetch("http://localhost:4000/post/" + id, { credentials: "include" })
+    fetch(`${process.env.REACT_APP_API_URL}post` + id, { credentials: "include" })
       .then(res => res.json())
       .then(postInfo => {
         setTitle(postInfo.title);
@@ -43,7 +43,7 @@ export default function EditPost() {
     data.set("content", content);
     if (files?.[0]) data.set("file", files[0]);
 
-    const response = await fetch("http://localhost:4000/post/" + id, {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}post` + id, {
       method: "PUT",
       body: data,
       credentials: "include",

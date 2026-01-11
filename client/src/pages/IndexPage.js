@@ -6,7 +6,7 @@ export default function IndexPage() {
   const [loading, setLoading] = useState(true); // spinner while fetching
 
   useEffect(() => {
-    fetch("http://localhost:4000/post")
+    fetch(`${process.env.REACT_APP_API_URL}post`)
       .then(res => res.json())
       .then(posts => {
         setPosts(posts);

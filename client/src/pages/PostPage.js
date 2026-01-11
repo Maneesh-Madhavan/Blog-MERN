@@ -10,7 +10,7 @@ export default function PostPage() {
   const { id } = useParams();
 
   useEffect(() => {
-    fetch(`http://localhost:4000/post/${id}`)
+    fetch(`${process.env.REACT_APP_API_URL}post/${id}`)
       .then(res => res.json())
       .then(post => {
         setPostInfo(post);
