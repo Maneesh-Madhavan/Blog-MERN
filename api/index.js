@@ -29,7 +29,7 @@ cloudinary.config({
 app.use(cors({
   origin: [
     "http://localhost:3000",
-    "https://blog-mern-frontend-opal-delta.vercel.app",
+    "insightblog-mernblog.vercel.app",
   ],
   credentials: true,
 }));
