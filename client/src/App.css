@@ -320,6 +320,30 @@ form.register p a:hover {
         margin: 30px auto;
     }
 }
+/* Password field with eye icon */
+.password-field {
+    position: relative;
+}
+
+.password-field input {
+    padding-right: 40px;
+}
+
+/* Eye icon */
+.eye-icon {
+    position: absolute;
+    right: 12px;
+    top: 55%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #555;
+    font-size: 1.1rem;
+}
+
+.eye-icon:hover {
+    color: #111;
+}
+
 
 header a.logo {
     font-weight: bold;
@@ -358,4 +382,98 @@ header nav a {
 
 header nav a:hover {
     color: #555;
+}
+.skeleton {
+  animation: pulse 1.4s infinite;
+}
+
+.skeleton .image {
+  width: 200px;
+  height: 140px;
+  background: #eee;
+}
+
+.skeleton .line {
+  height: 14px;
+  background: #eee;
+  margin-bottom: 8px;
+}
+
+.skeleton .title {
+  width: 70%;
+}
+
+.skeleton .small {
+  width: 40%;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+.skeleton-postpage {
+  background: linear-gradient(
+    90deg,
+    #eee 25%,
+    #ddd 37%,
+    #eee 63%
+  );
+  background-size: 400% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+
+/* Variants */
+.skeleton-postpage.title { height: 38px; width: 80%; }
+.skeleton-postpage.meta { height: 14px; width: 40%; }
+.skeleton-postpage.image { height: 280px; width: 100%; }
+.skeleton-postpage.text { height: 16px; width: 100%; }
+.skeleton-postpage.text.short { width: 70%; }
+
+@keyframes shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+.editor-form {
+    max-width: 850px;
+    margin: 40px auto;
+}
+
+.editor-form h1 {
+    text-align: center;
+    margin-bottom: 25px;
+    font-family: 'Times New Roman', serif;
+}
+.editor-form button {
+    margin-top: 20px;
+}
+
+.editor-form label {
+    display: block;
+    font-weight: bold;
+    margin: 15px 0 5px;
+}
+
+.editor-form input {
+    width: 100%;
+    padding: 10px;
+}
+
+.editor-box {
+    border: 1px solid #ccc;
+    background: #fff;
+}
+
+.preview-wrapper {
+    margin: 30px 0;
+    display: grid;
+    gap: 25px;
+}
+
+.preview-card {
+    border: 1px dashed #ccc;
+    padding: 15px;
+    background: #faf9f6;
 }

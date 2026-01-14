@@ -10,10 +10,17 @@ export default function CreatePost() {
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
   const [files, setFiles] = useState(null);
+  const [preview, setPreview] = useState(null);
   const [redirect, setRedirect] = useState(false);
 
-  async function createNewPost(ev) {
-    ev.preventDefault();
+  function handleFileChange(e) {
+    const file = e.target.files[0];
+    setFiles(e.target.files);
+    if (file) setPreview(URL.createObjectURL(file));
+  }
+
+  async function createNewPost(e) {
+    e.preventDefault();
 
     const content = draftToHtml(
       convertToRaw(editorState.getCurrentContent())
@@ -31,55 +38,82 @@ export default function CreatePost() {
       credentials: "include",
     });
 
-    if (response.ok) {
-      setRedirect(true);
-    }
+    if (response.ok) setRedirect(true);
   }
 
-  if (redirect) {
-    return <Navigate to="/" />;
-  }
+  if (redirect) return <Navigate to="/" />;
 
   return (
-    <form onSubmit={createNewPost} style={{ maxWidth: 800, margin: "auto" }}>
+    <form className="editor-form" onSubmit={createNewPost}>
+      <h1>Create Post</h1>
+
+      <label>Title</label>
       <input
         type="text"
-        placeholder="Title"
         value={title}
         onChange={e => setTitle(e.target.value)}
-        style={{ display: "block", width: "100%", marginBottom: 10 }}
+        placeholder="Post title"
+        required
       />
 
+      <label>Summary</label>
       <input
         type="text"
-        placeholder="Summary"
         value={summary}
         onChange={e => setSummary(e.target.value)}
-        style={{ display: "block", width: "100%", marginBottom: 10 }}
+        placeholder="Short summary"
+        required
       />
 
-      <input
-        type="file"
-        onChange={e => setFiles(e.target.files)}
-        style={{ marginBottom: 10 }}
-      />
+      <label>Cover Image</label>
+      <input type="file" accept="image/*" onChange={handleFileChange} />
 
-      <div style={{ border: "1px solid #ccc", minHeight: 200 }}>
+      {preview && (
+        <div className="preview-wrapper">
+
+          {/* Listing preview */}
+          <div className="preview-card">
+            <h4>Listing Preview</h4>
+            <div className="post preview-post">
+              <div className="image">
+                <img src={preview} alt="preview" />
+              </div>
+              <div className="texts">
+                <h2>{title || "Post title"}</h2>
+                <p className="summary">
+                  {summary || "Post summary will appear here"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Post page preview */}
+          <div className="preview-card">
+            <h4>Post Page Preview</h4>
+            <div className="post-page preview-postpage">
+              <h1>{title || "Post title"}</h1>
+              <div className="image">
+                <img src={preview} alt="preview" />
+              </div>
+            </div>
+          </div>
+
+        </div>
+      )}
+
+      <label>Content</label>
+      <div className="editor-box">
         <Editor
           editorState={editorState}
           onEditorStateChange={setEditorState}
+          editorStyle={{ minHeight: 200, padding: 10 }}
           toolbar={{
             options: ["inline", "blockType", "list", "textAlign", "history", "link"],
-            inline: { options: ["bold", "italic", "underline", "strikethrough"] },
-            blockType: { options: ["Normal", "H1", "H2", "H3"] },
-            list: { options: ["unordered", "ordered"] },
-            textAlign: { options: ["left", "center", "right", "justify"] },
-            history: { options: ["undo", "redo"] },
           }}
         />
       </div>
 
-      <button style={{ marginTop: 10 }}>Create Post</button>
+      <button>Create Post</button>
     </form>
   );
 }
