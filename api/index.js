@@ -29,7 +29,7 @@ cloudinary.config({
 app.use(cors({
   origin: [
     "http://localhost:3000",
-    "https://insightblog-mernblog.vercel.app/",
+    "https://insightblog-mernblog.vercel.app",
   ],
   credentials: true,
 }));
