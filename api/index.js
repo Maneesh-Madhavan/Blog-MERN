@@ -17,6 +17,7 @@ const app = express();
 const uploadMiddleware = multer({ storage: multer.memoryStorage() });
 const salt = bcrypt.genSaltSync(10);
 const secret = process.env.JWT_SECRET;
+const isProd = process.env.NODE_ENV === "production" || process.env.VERCEL === "1";
 
 /* ---------------- CLOUDINARY ---------------- */
 cloudinary.config({
@@ -125,8 +126,8 @@ app.post("/login", async (req, res) => {
   jwt.sign({ id: userDoc._id, username: userDoc.username }, secret, {}, (err, token) => {
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
     }).json({ id: userDoc._id, username });
   });
 });
@@ -144,8 +145,8 @@ app.get("/profile", (req, res) => {
 app.post("/logout", (req, res) => {
   res.cookie("token", "", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure: isProd,
+    sameSite: isProd ? "none" : "lax",
   }).json("ok");
 });
 
@@ -173,9 +174,7 @@ app.post("/post", authMiddleware, uploadMiddleware.single("file"), async (req, r
 });
 
 app.get("/post", async (req, res) => {
-  if (mongoose.connection.readyState !== 1) {
-    return res.status(503).json({ error: "Database not connected" });
-  }
+  await connectDB();
   try {
     const posts = await Post.find()
       .populate("author", ["username"])
@@ -187,9 +186,7 @@ app.get("/post", async (req, res) => {
 });
 
 app.get("/post/search", async (req, res) => {
-  if (mongoose.connection.readyState !== 1) {
-    return res.status(503).json({ error: "Database not connected" });
-  }
+  await connectDB();
   const { q } = req.query;
   if (!q) return res.json([]);
   try {
@@ -209,9 +206,7 @@ app.get("/post/search", async (req, res) => {
 });
 
 app.get("/post/:id", async (req, res) => {
-  if (mongoose.connection.readyState !== 1) {
-    return res.status(503).json({ error: "Database not connected" });
-  }
+  await connectDB();
   try {
     const post = await Post.findById(req.params.id)
       .populate("author", ["username"]);
