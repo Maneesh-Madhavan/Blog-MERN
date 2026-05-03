@@ -1,114 +1,100 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { MdEdit, MdPageview, MdDelete } from "react-icons/md";
+import { MdEdit, MdVisibility, MdDelete, MdArticle } from "react-icons/md";
+import { useToast } from "../Toast";
 
 export default function MyPostsPage() {
   const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [deleteId, setDeleteId] = useState(null);
+  const { addToast } = useToast();
 
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_API_URL}myposts`, {
-      credentials: "include",
-    })
+    const baseUrl = process.env.REACT_APP_API_URL.replace(/\/$/, "");
+    fetch(`${baseUrl}/myposts`, { credentials: "include" })
       .then(res => res.json())
-      .then(data => setPosts(Array.isArray(data) ? data : []))
-      .catch(() => setPosts([]));
+      .then(data => { setPosts(Array.isArray(data) ? data : []); setLoading(false); })
+      .catch(() => { setPosts([]); setLoading(false); });
   }, []);
 
-  async function deletePost(id) {
-    if (!window.confirm("Are you sure you want to delete this post?")) return;
-
-    const res = await fetch(
-      `${process.env.REACT_APP_API_URL}post/${id}`,
-      { method: "DELETE", credentials: "include" }
-    );
-
-    if (res.ok) {
-      setPosts(prev => prev.filter(p => p._id !== id));
-    } else {
-      alert("Failed to delete post");
+  async function confirmDelete() {
+    if (!deleteId) return;
+    try {
+      const baseUrl = process.env.REACT_APP_API_URL.replace(/\/$/, "");
+      const res = await fetch(`${baseUrl}/post/${deleteId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (res.ok) {
+        setPosts(prev => prev.filter(p => p._id !== deleteId));
+        addToast("Post deleted", "info");
+      } else {
+        addToast("Failed to delete post", "error");
+      }
+    } catch {
+      addToast("Network error", "error");
     }
+    setDeleteId(null);
   }
 
   return (
-    <div style={{ maxWidth: 900, margin: "0 auto", padding: 10 }}>
-      <h2 style={{ textAlign: "center", marginBottom: 20 }}>My Posts</h2>
+    <div className="myposts-page container fade-in">
+      <h2>My Stories</h2>
 
-      {posts.length === 0 ? (
+      {loading ? (
         <SkeletonRows />
+      ) : posts.length === 0 ? (
+        <div className="empty-state">
+          <div className="icon" style={{ opacity: 0.3 }}><MdArticle size={48} /></div>
+          <p>You haven't written any posts yet.</p>
+        </div>
       ) : (
         posts.map(post => (
-          <div
-            key={post._id}
-            style={{
-              marginBottom: 15,
-              border: "1px solid #ddd",
-              borderRadius: 5,
-              padding: 10,
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              background: "#fff",
-            }}
-          >
-            <Link
-              to={`/post/${post._id}`}
-              style={{
-                textDecoration: "none",
-                color: "#111",
-                flex: 1,
-              }}
-            >
-              <h3 style={{ margin: 0 }}>{post.title}</h3>
+          <div key={post._id} className="mypost-card">
+            <Link to={`/post/${post._id}`} style={{ textDecoration: "none", color: "inherit", flex: 1 }}>
+              <h3>{post.title}</h3>
             </Link>
-
-            <div style={{ display: "flex", gap: 10 }}>
-              <Link to={`/edit/${post._id}`} title="Edit" className="icon-link">
-                <MdEdit size={22} />
+            <div className="actions">
+              <Link to={`/edit/${post._id}`} className="nav-btn" title="Edit">
+                <MdEdit size={18} />
               </Link>
-
-              <Link to={`/post/${post._id}`} title="View" className="icon-link">
-                <MdPageview size={22} />
+              <Link to={`/post/${post._id}`} className="nav-btn" title="View">
+                <MdVisibility size={18} />
               </Link>
-
-              <button
-                onClick={() => deletePost(post._id)}
-                title="Delete"
-                className="icon-link"
-              >
-                <MdDelete size={22} />
+              <button className="nav-btn danger" onClick={() => setDeleteId(post._id)} title="Delete">
+                <MdDelete size={18} />
               </button>
             </div>
           </div>
         ))
       )}
+
+      {/* Delete confirmation modal */}
+      {deleteId && (
+        <div className="modal-overlay" onClick={() => setDeleteId(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h3>Delete Post?</h3>
+            <p>This action cannot be undone. The post will be permanently removed.</p>
+            <div className="modal-actions">
+              <button onClick={() => setDeleteId(null)}>Cancel</button>
+              <button className="btn-danger" onClick={confirmDelete}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-/* 🔹 Skeleton rows */
 function SkeletonRows() {
   return (
     <>
       {[1, 2, 3].map(i => (
-        <div
-          key={i}
-          style={{
-            marginBottom: 15,
-            border: "1px solid #eee",
-            borderRadius: 5,
-            padding: 10,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            background: "#f5f5f5",
-            animation: "pulse 1.2s infinite",
-          }}
-        >
-          <div style={{ width: "60%", height: 18, background: "#ddd" }} />
-          <div style={{ display: "flex", gap: 10 }}>
-            <div style={{ width: 22, height: 22, background: "#ddd" }} />
-            <div style={{ width: 22, height: 22, background: "#ddd" }} />
-            <div style={{ width: 22, height: 22, background: "#ddd" }} />
+        <div key={i} className="mypost-card skeleton" style={{ opacity: 0.5 }}>
+          <div style={{ width: "60%", height: 18, background: "var(--skeleton-base)", borderRadius: 4 }} />
+          <div className="actions">
+            <div style={{ width: 36, height: 36, background: "var(--skeleton-base)", borderRadius: "50%" }} />
+            <div style={{ width: 36, height: 36, background: "var(--skeleton-base)", borderRadius: "50%" }} />
           </div>
         </div>
       ))}
