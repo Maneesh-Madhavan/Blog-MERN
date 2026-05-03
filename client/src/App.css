@@ -733,6 +733,82 @@ form p a {
   text-align: center;
 }
 
+/* ===== MY STORIES ===== */
+.myposts-page {
+  padding: 60px 24px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.myposts-page h2 {
+  font-family: var(--font-serif);
+  font-size: 2.5rem;
+  margin-bottom: 32px;
+}
+
+.mypost-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-lg);
+  margin-bottom: 16px;
+  transition: var(--transition-bounce);
+  box-shadow: var(--shadow-sm);
+}
+
+.mypost-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-primary);
+}
+
+.mypost-card h3 {
+  font-family: var(--font-sans);
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+.mypost-card .actions {
+  display: flex;
+  gap: 12px;
+}
+
+.mypost-card .nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: none;
+  cursor: pointer;
+  transition: var(--transition-bounce);
+}
+
+.mypost-card .nav-btn:hover {
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  transform: scale(1.05);
+}
+
+.mypost-card .nav-btn.danger {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.mypost-card .nav-btn.danger:hover {
+  background: var(--danger);
+  color: #fff;
+  transform: scale(1.05);
+}
+
 .editor-box {
   background: var(--bg-input);
   border: 1px solid var(--border-primary);
