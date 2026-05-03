@@ -4,7 +4,7 @@ import { UserContext } from "./UserContext";
 import { useTheme } from "./ThemeContext";
 import { useToast } from "./Toast";
 import {
-  MdAddCircleOutline, MdLogout, MdLogin, MdPersonAdd,
+  MdAddCircleOutline, MdLogout,
   MdArticle, MdSearch, MdClose, MdDarkMode, MdLightMode, MdMenu
 } from "react-icons/md";
 
